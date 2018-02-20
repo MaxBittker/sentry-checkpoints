@@ -5,38 +5,31 @@ import inspect
 import ast
 from functools import wraps
 
-@wraps
+import inspect, itertools
+
+class ReturnLister(ast.NodeTransformer):
+    def visit_Return(self, node):
+        print(node)
+        # self.generic_visit(node)
+        import ipdb;
+        ipdb.set_trace()
+        return node
+
+
 def decorate(f):
-    exec(inspect.getsource(f))
-    print("??")
-    print(f.__name__)
+    source = inspect.getsource(f)
+    source = itertools.dropwhile(lambda line: line.startswith('@'), source.splitlines())
+    source = '\n'.join(source)
+    tree = ast.parse(source)
+    ReturnLister().visit(tree)
+    # print(tree)
+    exec(compile(tree, filename="<ast>", mode="exec"))
+    
     return eval(f.__name__)
 
 @decorate
 def test():
-    print("?")
+    print("running ")
     return 1
 
-# @wraps
-# def decorate(f):
-#     print("??")
-#     tree = ast.parse(inspect.getsource(f))
-#     print(tree)
-#     exec(compile(tree, filename="<ast>", mode="eval"))
-#     return eval(f.__name__)
-
-# @decorate
-# def test():
-#     print("?")
-#     return 1
-
 test()
-
-
-# def checkpoint(some_function):
-
-#     def wrapper(*args, **kwargs):
-#         some_function(*args, **kwargs)
-#         client.captureException(Exception('I know Python!'))
-
-#     return wrapper
